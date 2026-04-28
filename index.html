@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Betting Advisor IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--green:#00e676;--gold:#ffd600;--red:#ff5252;--bg:#060610;--card:#0d0d1f;--border:#1a1a35;--text:#e8e8f0;--muted:#4a4a6a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans','Segoe UI',sans-serif;min-height:100vh;padding-bottom:90px;}
+input,select,button,textarea{font-family:'DM Sans','Segoe UI',sans-serif;color-scheme:dark;}
+input[type=range]{accent-color:var(--green);width:100%;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#2a2a4a;border-radius:4px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.fade{animation:fadeUp .4s ease both}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+.pulse{animation:pulse 1.5s infinite}
+.header{position:sticky;top:0;z-index:100;background:rgba(6,6,16,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 16px;}
+.header-inner{max-width:680px;margin:0 auto;}
+.brand-tag{font-size:10px;color:var(--green);letter-spacing:4px;font-weight:700;}
+.brand-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;line-height:1.1;}
+.brand-sub{font-size:11px;color:var(--muted);text-transform:capitalize;margin-top:1px;}
+.tabs{display:flex;gap:4px;margin-top:14px;}
+.tab-btn{flex:1;background:transparent;border:1px solid transparent;color:var(--muted);border-radius:10px;padding:8px 4px;cursor:pointer;position:relative;transition:all .2s;}
+.tab-btn.active{background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.25);color:var(--green);}
+.tab-icon{display:block;font-size:18px;}
+.tab-label{display:block;font-size:10px;margin-top:2px;font-weight:600;}
+.badge{position:absolute;top:4px;right:18%;background:var(--gold);color:#000;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.content{max-width:680px;margin:0 auto;padding:20px 16px;}
+.card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;padding:20px 22px;position:relative;overflow:hidden;margin-bottom:14px;}
+.glow-green::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);}
+.glow-gold::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.btn{border:none;border-radius:10px;padding:11px 18px;font-weight:800;cursor:pointer;font-size:13px;transition:all .2s;}
+.btn-green{background:var(--green);color:#000;}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted);}
+.btn-sm{padding:6px 12px;font-size:11px;border-radius:8px;}
+.btn-full{width:100%;padding:13px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:10px 12px;font-size:13px;outline:none;}
+.label{font-size:11px;color:var(--muted);letter-spacing:2px;display:block;margin-bottom:6px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;text-align:center;}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:2px;margin-top:3px;}
+.pct-bar{display:flex;height:8px;border-radius:6px;overflow:hidden;background:#111128;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.chip{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:20px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:600;}
+.chip.active{background:rgba(255,255,255,.08);border-color:#3a3a5a;color:var(--text);}
+.loading-ov{position:absolute;inset:0;background:rgba(6,6,16,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:18px;z-index:3;gap:10px;}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--card);border:1px solid #2a2a4a;border-radius:20px;padding:28px;width:100%;max-width:420px;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.notif-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:300;width:calc(100% - 32px);max-width:500px;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.notif{background:var(--card);border-radius:14px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;pointer-events:all;animation:fadeUp .3s ease;}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(6,6,16,.97);border-top:1px solid var(--border);padding:8px 16px;display:flex;gap:4px;z-index:50;}
+.nav-btn{flex:1;background:transparent;border:1px solid transparent;color:var(--muted);border-radius:12px;padding:8px 4px;cursor:pointer;transition:all .2s;position:relative;}
+.nav-btn.active{background:rgba(0,230,118,.08);border-color:rgba(0,230,118,.25);color:var(--green);}
+</style>
+</head>
+<body>
+
+<div class="notif-wrap" id="notifWrap"></div>
+
+<!-- BET MODAL -->
+<div class="modal-bg" id="betModal" style="display:none;">
+  <div class="modal fade">
+    <div style="font-size:16px;font-weight:800;margin-bottom:4px;">📝 Registrar apuesta</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:20px;" id="mMatchName"></div>
+    <div id="mBadge" style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:12px;padding:12px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:10px;color:var(--green);letter-spacing:2px;font-weight:700;">APUESTA RECOMENDADA</div><div style="font-size:16px;font-weight:800;margin-top:2px;" id="mBestLabel"></div></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--green);" id="mBestPct"></div>
+    </div>
+    <label class="label">MONTO A APOSTAR (COP)</label>
+    <input type="number" id="mAmount" placeholder="Ej: 50000" class="input" style="margin-bottom:12px;" oninput="calcPotential()">
+    <label class="label">CUOTA / ODD (opcional)</label>
+    <input type="number" step="0.01" id="mOdds" placeholder="Ej: 1.85" class="input" style="margin-bottom:8px;" oninput="calcPotential()">
+    <div id="mPotential" style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;min-height:18px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-green btn-full" onclick="confirmBet()">Guardar ✅</button>
+      <button class="btn btn-outline" style="padding:13px 16px;" onclick="closeBetModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div class="brand-tag">⚽ BETTING ADVISOR CON IA</div>
+        <div class="brand-title">PARTIDOS DE HOY</div>
+        <div class="brand-sub" id="dateLabel"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" style="font-size:11px;padding:7px 12px;" onclick="loadTodayMatches()" id="reloadBtn">🔄</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-hoy-btn" onclick="setTab('hoy',this)"><span class="tab-icon">⚽</span><span class="tab-label">Hoy</span></button>
+      <button class="tab-btn" id="tab-historial-btn" onclick="setTab('historial',this)"><span class="tab-icon">📋</span><span class="tab-label">Historial</span><span class="badge" id="pendBadge1" style="display:none;"></span></button>
+      <button class="tab-btn" id="tab-balance-btn" onclick="setTab('balance',this)"><span class="tab-icon">💰</span><span class="tab-label">Balance</span></button>
+      <button class="tab-btn" id="tab-alertas-btn" onclick="setTab('alertas',this)"><span class="tab-icon">🔔</span><span class="tab-label">Alertas</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="tab-hoy"></div>
+  <div id="tab-historial" style="display:none;"></div>
+  <div id="tab-balance" style="display:none;"></div>
+  <div id="tab-alertas" style="display:none;"></div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-hoy" onclick="setTab('hoy',document.getElementById('tab-hoy-btn'),true)"><span style="display:block;font-size:20px;">⚽</span><span style="display:block;font-size:10px;font-weight:600;">Hoy</span></button>
+  <button class="nav-btn" id="nav-historial" onclick="setTab('historial',document.getElementById('tab-historial-btn'),true)"><span style="display:block;font-size:20px;">📋</span><span style="display:block;font-size:10px;font-weight:600;">Historial</span><span class="badge" id="pendBadge2" style="display:none;"></span></button>
+  <button class="nav-btn" id="nav-balance" onclick="setTab('balance',document.getElementById('tab-balance-btn'),true)"><span style="display:block;font-size:20px;">💰</span><span style="display:block;font-size:10px;font-weight:600;">Balance</span></button>
+  <button class="nav-btn" id="nav-alertas" onclick="setTab('alertas',document.getElementById('tab-alertas-btn'),true)"><span style="display:block;font-size:20px;">🔔</span><span style="display:block;font-size:10px;font-weight:600;">Alertas</span></button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let matches = [];
+let filter  = "all";
+let histFilter = "all";
+let betPending = null;
+let bets    = JSON.parse(localStorage.getItem("bets")  || "[]");
+let alerts  = JSON.parse(localStorage.getItem("alerts")|| "[]");
+
+const TODAY = new Date().toISOString().split("T")[0];
+const LEAGUES = [
+  {flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",name:"Premier League"},{flag:"🇪🇸",name:"La Liga"},
+  {flag:"🇮🇹",name:"Serie A"},{flag:"🇩🇪",name:"Bundesliga"},
+  {flag:"🇫🇷",name:"Ligue 1"},{flag:"🏆",name:"Champions League"},
+  {flag:"🇨🇴",name:"Liga BetPlay"},{flag:"🇧🇷",name:"Brasileirao"},
+  {flag:"🌍",name:"Otra liga"}
+];
+const LEAGUE_OPTS = LEAGUES.map(l=>`<option value="${l.flag}|${l.name}">${l.flag} ${l.name}</option>`).join("");
+
+const saveLocal = () => {
+  localStorage.setItem("bets",   JSON.stringify(bets));
+  localStorage.setItem("alerts", JSON.stringify(alerts));
+};
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+const getBest = m => [{label:m.home,pct:m.homePct,type:"LOCAL"},{label:"Empate",pct:m.drawPct,type:"EMPATE"},{label:m.away,pct:m.awayPct,type:"VISITANTE"}].reduce((a,b)=>a.pct>=b.pct?a:b);
+const getTier = pct => pct>=75?{label:"ALTA CONFIANZA",color:"#00e676",bg:"rgba(0,230,118,.10)",border:"rgba(0,230,118,.30)"}:pct>=60?{label:"FAVORABLE",color:"#ffd600",bg:"rgba(255,214,0,.08)",border:"rgba(255,214,0,.25)"}:{label:"RIESGO",color:"#ff5252",bg:"rgba(255,82,82,.07)",border:"rgba(255,82,82,.20)"};
+const tIcon  = {LOCAL:"🏠",VISITANTE:"✈️",EMPATE:"🤝"};
+const fmt    = n => new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n||0);
+document.getElementById("dateLabel").textContent = new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+// ═══════════════════════════════════════════════════════
+// CLAUDE AI — llamada directa (funciona desde HTML local)
+// ═══════════════════════════════════════════════════════
+async function callClaude(prompt, maxTokens=600) {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens: maxTokens,
+      messages:[{role:"user", content:prompt}]
+    })
+  });
+  const data = await res.json();
+  return data.content?.find(b=>b.type==="text")?.text || "";
+}
+
+// ── Obtener partidos del día con IA ─────────────────────
+async function loadTodayMatches() {
+  matches = [];
+  const c = document.getElementById("tab-hoy");
+  c.innerHTML = `<div class="empty fade"><div class="spin" style="font-size:52px;margin-bottom:16px;">⚽</div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;margin-bottom:8px;">BUSCANDO PARTIDOS...</div><div style="font-size:12px;color:var(--muted);">La IA está buscando los partidos de hoy</div></div>`;
+
+  const today = new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  const prompt = `Hoy es ${today}. Lista los partidos de fútbol más importantes que se juegan HOY en las principales ligas del mundo (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League, Copa Libertadores, Liga BetPlay Colombia, MLS, y otras ligas relevantes).
+
+Responde ÚNICAMENTE con un JSON válido, sin texto adicional, sin markdown, sin explicaciones:
+[{"league":"nombre liga","flag":"emoji bandera","time":"HH:MM","home":"equipo local","away":"equipo visitante"},...]
+
+Si no hay partidos relevantes hoy, devuelve un array vacío: []
+Incluye máximo 15 partidos. Usa la hora en formato 24h hora Colombia (UTC-5).`;
+
+  try {
+    const text = await callClaude(prompt, 1000);
+    const clean = text.replace(/```json|```/g,"").trim();
+    const raw = JSON.parse(clean);
+
+    if(!raw.length) {
+      c.innerHTML = `<div class="empty fade"><div style="font-size:48px;margin-bottom:12px;">📅</div><div style="font-weight:800;margin-bottom:8px;">No hay partidos hoy</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;">La IA no encontró partidos programados para hoy</div><button class="btn btn-green" onclick="showAddForm()">✏️ Agregar manualmente</button></div>`;
+      return;
+    }
+
+    matches = raw.map((m,i)=>({...m, id:Date.now()+i, date:TODAY, loading:false}));
+    renderHoy();
+
+    // Analizar uno por uno
+    for(const m of matches) {
+      await analyzeMatch(m.id);
+      await new Promise(r=>setTimeout(r,400));
+    }
+    checkAlerts();
+  } catch(e) {
+    c.innerHTML = `<div class="empty fade"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><div style="font-weight:800;margin-bottom:8px;color:var(--red);">Error al conectar con la IA</div><div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Verifica tu conexión a internet e inténtalo de nuevo</div><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;"><button class="btn btn-green" onclick="loadTodayMatches()">🔄 Reintentar</button><button class="btn btn-outline" onclick="showAddForm()">✏️ Agregar manual</button></div></div>`;
+  }
+}
+
+// ── Analizar partido con IA ──────────────────────────────
+async function analyzeMatch(id) {
+  const m = matches.find(x=>x.id===id);
+  if(!m) return;
+  m.loading = true;
+  renderHoy();
+
+  const prompt = `Eres un experto analista de apuestas de fútbol con 20 años de experiencia.
+Analiza este partido y responde ÚNICAMENTE con JSON válido, sin texto extra:
+Partido: ${m.home} vs ${m.away} | Liga: ${m.league} | Fecha: ${m.date}
+{"homePct":NUMBER,"drawPct":NUMBER,"awayPct":NUMBER,"confidence":"alta"|"media"|"baja","reason":"máximo 12 palabras explicando la ventaja"}
+Los tres porcentajes deben sumar exactamente 100.`;
+
+  try {
+    const text = await callClaude(prompt, 300);
+    const r = JSON.parse(text.replace(/```json|```/g,"").trim());
+    Object.assign(m, r, {loading:false});
+  } catch {
+    m.loading = false; m.error = true;
+  }
+  renderHoy();
+}
+
+// ═══════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════
+function setTab(name, btn, fromNav=false) {
+  ["hoy","historial","balance","alertas"].forEach(t=>{
+    document.getElementById("tab-"+t).style.display = t===name?"block":"none";
+    document.getElementById("tab-"+t+"-btn")?.classList.remove("active");
+    document.getElementById("nav-"+t)?.classList.remove("active");
+  });
+  document.getElementById("tab-"+name+"-btn")?.classList.add("active");
+  document.getElementById("nav-"+name)?.classList.add("active");
+  if(name==="historial") renderHistorial();
+  if(name==="balance")   renderBalance();
+  if(name==="alertas")   renderAlertas();
+}
+
+// ═══════════════════════════════════════════════════════
+// TAB HOY
+// ═══════════════════════════════════════════════════════
+function renderHoy() {
+  const c = document.getElementById("tab-hoy");
+  if(!matches.length) {
+    c.innerHTML = `
+    <div class="empty fade">
+      <div style="font-size:62px;margin-bottom:16px;">🤖</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;margin-bottom:8px;">LISTO PARA ANALIZAR</div>
+      <div style="font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:32px;">La IA buscará los partidos de hoy<br>y calculará las probabilidades</div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <button class="btn btn-green" style="font-size:15px;padding:15px 28px;border-radius:14px;" onclick="loadTodayMatches()">⚡ Cargar partidos de hoy</button>
+        <button class="btn btn-outline" style="font-size:15px;padding:15px 22px;border-radius:14px;" onclick="showAddForm()">✏️ Agregar manual</button>
+      </div>
+    </div>
+    <div id="addFormWrap"></div>`;
+    return;
+  }
+
+  const analyzed    = matches.filter(m=>m.homePct!==undefined);
+  const recommended = analyzed.filter(m=>getBest(m).pct>=60);
+  const topPick     = [...analyzed].sort((a,b)=>getBest(b).pct-getBest(a).pct)[0];
+  const doneCount   = analyzed.length;
+  const isAnalyzing = matches.some(m=>m.loading);
+
+  // Stats
+  let html = `
+  <div class="stats-grid fade">
+    <div class="stat-card"><div class="stat-num">${matches.length}</div><div class="stat-label">PARTIDOS HOY</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${recommended.length}</div><div class="stat-label">RECOMENDADOS</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--gold)">${topPick?getBest(topPick).pct+"%":"—"}</div><div class="stat-label">MEJOR PROB.</div></div>
+  </div>`;
+
+  // Top pick
+  if(topPick && getBest(topPick).pct>=60) {
+    const best=getBest(topPick), tier=getTier(best.pct);
+    html += `
+    <div class="card glow-green fade" style="background:linear-gradient(135deg,#001a0d,#00100a);border-color:rgba(0,230,118,.35);margin-bottom:20px;">
+      <div style="font-size:10px;color:var(--green);letter-spacing:4px;font-weight:700;">🎯 MEJOR APUESTA DEL DÍA</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;margin:10px 0 4px;">${topPick.home} vs ${topPick.away}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">${topPick.flag} ${topPick.league} · ${topPick.time}</div>
+      <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:56px;color:var(--green);line-height:1;">${best.pct}%</div>
+        <div>
+          <div style="font-size:10px;color:var(--green);letter-spacing:3px;font-weight:700;">APOSTAR A</div>
+          <div style="font-size:20px;font-weight:800;margin-top:2px;">${tIcon[best.type]} ${best.label}</div>
+          ${topPick.reason?`<div style="font-size:11px;color:var(--muted);margin-top:4px;">${topPick.reason}</div>`:""}
+        </div>
+      </div>
+      <button class="btn btn-green" style="width:100%;padding:12px;border-radius:12px;" onclick="openBetModal(${topPick.id})">+ Registrar esta apuesta</button>
+    </div>`;
+  }
+
+  // Progress
+  if(isAnalyzing || (doneCount>0 && doneCount<matches.length)) {
+    const pct = Math.round((doneCount/matches.length)*100);
+    html += `
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;">
+        <span class="pulse" style="color:var(--green);">⚡ Analizando con IA...</span>
+        <span>${doneCount} / ${matches.length}</span>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;background:linear-gradient(90deg,var(--green),#00bcd4);width:${pct}%;transition:width .5s;border-radius:4px;"></div>
+      </div>
+    </div>`;
+  }
+
+  // Filters
+  const filtered = filter==="top" ? analyzed.filter(m=>getBest(m).pct>=75)
+    : filter==="rec"  ? analyzed.filter(m=>getBest(m).pct>=60)
+    : filter==="risk" ? analyzed.filter(m=>m.homePct!==undefined&&getBest(m).pct<60)
+    : matches;
+
+  html += `
+  <div class="chips">
+    <button class="btn btn-green btn-sm" onclick="showAddForm()">➕ Agregar</button>
+    <button class="btn btn-outline btn-sm" onclick="loadTodayMatches()">🔄 Recargar</button>
+    ${["all","top","rec","risk"].map((k,i)=>{
+      const lb=["Todos","🔥 ≥75%","✅ ≥60%","⚠️ Riesgo"];
+      return `<button class="chip${filter===k?" active":""}" onclick="setFilter('${k}')">${lb[i]}</button>`;
+    }).join("")}
+  </div>`;
+
+  // Match cards
+  if(!filtered.length) {
+    html += `<div class="empty"><div style="font-size:40px;margin-bottom:10px;">🔍</div><div>No hay partidos con ese filtro</div></div>`;
+  } else {
+    html += filtered.map((m,i)=>matchCardHtml(m,i)).join("");
+  }
+
+  html += `<div id="addFormWrap"></div>`;
+  c.innerHTML = html;
+}
+
+function matchCardHtml(m, i) {
+  const done = m.homePct!==undefined;
+  const best = done?getBest(m):null;
+  const tier = done?getTier(best.pct):null;
+  const border = done&&best.pct>=60?tier.border:"var(--border)";
+  const glowCls = done&&best.pct>=75?"glow-green":done&&best.pct>=60?"glow-gold":"";
+
+  let analysisHtml = "";
+  if(done) {
+    const recHtml = best.pct>=60 ? `
+    <div style="margin-top:14px;padding:12px 16px;border-radius:12px;background:${tier.bg};border:1px solid ${tier.border};display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:9px;color:${tier.color};letter-spacing:3px;font-weight:700;">${tier.label}</div>
+        <div style="font-size:16px;font-weight:800;margin-top:3px;">${tIcon[best.type]} ${best.label}</div>
+        ${m.reason?`<div style="font-size:11px;color:var(--muted);margin-top:3px;">${m.reason}</div>`:""}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:${tier.color};line-height:1;">${best.pct}%</div>
+        <button class="btn btn-green btn-sm" onclick="openBetModal(${m.id})">+ Apostar</button>
+      </div>
+    </div>` : `<div style="text-align:center;font-size:12px;color:var(--muted);padding:8px 0;margin-top:10px;">⚠️ Partido parejo — sin ventaja clara</div>`;
+
+    analysisHtml = `
+    <div style="margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:5px;"><span>${m.home}</span><span>Empate</span><span>${m.away}</span></div>
+      <div class="pct-bar">
+        <div style="width:${m.homePct}%;background:linear-gradient(90deg,#00e676,#00bcd4);transition:width 1s;"></div>
+        <div style="width:${m.drawPct}%;background:linear-gradient(90deg,#ffd600,#ff9800);transition:width 1s;"></div>
+        <div style="width:${m.awayPct}%;background:linear-gradient(90deg,#ff5252,#ff1744);transition:width 1s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-top:5px;">
+        <span style="color:#00e676">${m.homePct}%</span><span style="color:#ffd600">${m.drawPct}%</span><span style="color:#ff5252">${m.awayPct}%</span>
+      </div>
+    </div>
+    ${recHtml}`;
+  }
+
+  return `
+  <div class="card ${glowCls} fade" style="border-color:${border};animation-delay:${i*55}ms;" id="mc-${m.id}">
+    ${m.loading?`<div class="loading-ov"><div class="spin" style="font-size:28px;">⚽</div><div style="font-size:10px;color:var(--green);letter-spacing:4px;font-weight:700;margin-top:4px;">IA ANALIZANDO...</div></div>`:""}
+    ${m.error&&!m.loading?`<div class="loading-ov"><div style="font-size:28px;">⚠️</div><div style="font-size:12px;color:var(--red);margin-top:6px;">Error al analizar</div></div>`:""}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-size:11px;color:var(--muted);letter-spacing:1px;font-weight:600;">${m.flag} ${m.league.toUpperCase()}</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;color:#3a3a5a;">${m.time}</span>
+        <button onclick="removeMatch(${m.id})" style="background:none;border:none;color:#3a3a5a;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="flex:1;font-size:15px;font-weight:800;">${m.home}</span>
+      <span style="font-size:11px;color:#2a2a4a;font-weight:900;">VS</span>
+      <span style="flex:1;font-size:15px;font-weight:800;text-align:right;">${m.away}</span>
+    </div>
+    ${analysisHtml}
+  </div>`;
+}
+
+function setFilter(f){filter=f;renderHoy();}
+function removeMatch(id){matches=matches.filter(m=>m.id!==id);renderHoy();}
+
+// ── ADD FORM ─────────────────────────────────────────────
+function showAddForm() {
+  const w = document.getElementById("addFormWrap");
+  if(!w) return;
+  if(w.innerHTML) {w.innerHTML="";return;}
+  w.innerHTML = `
+  <div class="card fade" style="border-color:#2a2a4a;">
+    <div style="font-size:14px;font-weight:800;margin-bottom:16px;">✏️ Agregar partido</div>
+    <label class="label">LIGA</label>
+    <select id="af-lg" class="input" style="margin-bottom:12px;"><option value="|">Seleccionar...</option>${LEAGUE_OPTS}</select>
+    <div class="grid2" style="margin-bottom:12px;">
+      <div><label class="label">FECHA</label><input type="date" id="af-dt" value="${TODAY}" class="input"></div>
+      <div><label class="label">HORA</label><input type="time" id="af-tm" class="input"></div>
+    </div>
+    <div class="grid2" style="margin-bottom:16px;">
+      <div><label class="label">LOCAL</label><input id="af-hm" placeholder="Ej: Millonarios" class="input"></div>
+      <div><label class="label">VISITANTE</label><input id="af-aw" placeholder="Ej: América" class="input"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-green btn-full" onclick="submitAddForm()">Agregar y Analizar ⚡</button>
+      <button class="btn btn-outline" style="padding:13px 16px;" onclick="document.getElementById('addFormWrap').innerHTML=''">Cancelar</button>
+    </div>
+  </div>`;
+}
+
+async function submitAddForm() {
+  const [flag,league] = (document.getElementById("af-lg").value||"|").split("|");
+  const home = document.getElementById("af-hm").value.trim();
+  const away = document.getElementById("af-aw").value.trim();
+  const date = document.getElementById("af-dt").value;
+  const time = document.getElementById("af-tm").value;
+  if(!home||!away||!league){alert("Completa los campos obligatorios.");return;}
+  const nm = {id:Date.now(),league,flag,date,time,home,away,loading:false};
+  matches.push(nm);
+  document.getElementById("addFormWrap").innerHTML="";
+  renderHoy();
+  await analyzeMatch(nm.id);
+}
+
+// ═══════════════════════════════════════════════════════
+// BET MODAL
+// ═══════════════════════════════════════════════════════
+function openBetModal(id) {
+  const m = matches.find(x=>x.id===id);
+  if(!m||!m.homePct) return;
+  const best = getBest(m);
+  betPending = {match:m, best};
+  document.getElementById("mMatchName").textContent = `${m.home} vs ${m.away}`;
+  document.getElementById("mBestLabel").textContent = `${tIcon[best.type]} ${best.label}`;
+  document.getElementById("mBestPct").textContent   = `${best.pct}%`;
+  document.getElementById("mAmount").value = "";
+  document.getElementById("mOdds").value   = "";
+  document.getElementById("mPotential").textContent = "";
+  document.getElementById("betModal").style.display = "flex";
+}
+function closeBetModal(){document.getElementById("betModal").style.display="none";betPending=null;}
+function calcPotential(){
+  const a=parseFloat(document.getElementById("mAmount").value);
+  const o=parseFloat(document.getElementById("mOdds").value);
+  document.getElementById("mPotential").innerHTML = a&&o&&o>1?`Ganancia potencial: <strong style="color:var(--green)">${fmt(a*o-a)}</strong>`:"";
+}
+function confirmBet(){
+  const amount=parseFloat(document.getElementById("mAmount").value);
+  const odds=parseFloat(document.getElementById("mOdds").value)||null;
+  if(!amount||!betPending) return;
+  bets.unshift({id:Date.now(),...betPending,amount,odds,date:TODAY,result:"pendiente"});
+  saveLocal(); updateBadges(); closeBetModal();
+  showNotif("✅ Apuesta registrada","#00e676");
+}
+
+// ═══════════════════════════════════════════════════════
+// HISTORIAL
+// ═══════════════════════════════════════════════════════
+function renderHistorial(){
+  const c=document.getElementById("tab-historial");
+  const rC={ganada:"#00e676",perdida:"#ff5252",pendiente:"#ffd600"};
+  const rL={ganada:"✅ Ganada",perdida:"❌ Perdida",pendiente:"⏳ Pendiente"};
+  const list=histFilter==="all"?bets:bets.filter(b=>b.result===histFilter);
+  c.innerHTML=`
+  <div class="chips">
+    ${[["all","Todas"],["pendiente","⏳ Pendientes"],["ganada","✅ Ganadas"],["perdida","❌ Perdidas"]].map(([k,l])=>`<button class="chip${histFilter===k?" active":""}" onclick="setHistFilter('${k}')">${l}</button>`).join("")}
+  </div>
+  ${list.length?list.map((b,i)=>{
+    const pg=b.odds?b.amount*b.odds-b.amount:null;
+    const rg=b.result==="ganada"?(pg||0):b.result==="perdida"?-b.amount:null;
+    return `
+    <div class="card fade" style="animation-delay:${i*50}ms;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div><div style="font-size:12px;color:var(--muted);margin-bottom:3px;">${b.match.flag} ${b.match.league} · ${b.date}</div><div style="font-size:15px;font-weight:800;">${b.match.home} vs ${b.match.away}</div></div>
+        <button onclick="deleteBet(${b.id})" style="background:none;border:none;color:#3a3a5a;cursor:pointer;font-size:14px;">✕</button>
+      </div>
+      <div style="font-size:13px;margin-bottom:10px;">${tIcon[b.best.type]} Aposté a: <strong>${b.best.label}</strong> <span style="color:var(--green)">(${b.best.pct}%)</span></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <div style="background:#0a0a18;border-radius:10px;padding:7px 12px;font-size:12px;">💵 <strong style="color:var(--gold)">${fmt(b.amount)}</strong></div>
+        ${b.odds?`<div style="background:#0a0a18;border-radius:10px;padding:7px 12px;font-size:12px;">📊 Cuota: <strong>${b.odds}</strong></div>`:""}
+        ${pg?`<div style="background:#0a0a18;border-radius:10px;padding:7px 12px;font-size:12px;">🎯 Potencial: <strong style="color:var(--green)">${fmt(pg)}</strong></div>`:""}
+      </div>
+      ${rg!==null?`<div style="background:${rg>=0?"rgba(0,230,118,.08)":"rgba(255,82,82,.08)"};border:1px solid ${rg>=0?"rgba(0,230,118,.2)":"rgba(255,82,82,.2)"};border-radius:10px;padding:8px 14px;font-size:13px;margin-bottom:10px;">Resultado: <strong style="color:${rg>=0?"var(--green)":"var(--red)"};">${rg>=0?"+":""}${fmt(rg)}</strong></div>`:""}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:11px;font-weight:700;color:${rC[b.result]};background:${rC[b.result]}18;border-radius:8px;padding:4px 10px;">${rL[b.result]}</span>
+        ${b.result==="pendiente"?`
+        <button class="btn btn-sm" style="background:rgba(0,230,118,.12);color:var(--green);border:1px solid rgba(0,230,118,.3);" onclick="updBet(${b.id},'ganada')">✅ Ganada</button>
+        <button class="btn btn-sm" style="background:rgba(255,82,82,.12);color:var(--red);border:1px solid rgba(255,82,82,.3);" onclick="updBet(${b.id},'perdida')">❌ Perdida</button>`:""}
+      </div>
+    </div>`}).join(""):`<div class="empty"><div style="font-size:48px;margin-bottom:12px;">📋</div><div>No hay apuestas registradas</div></div>`}`;
+}
+function setHistFilter(f){histFilter=f;renderHistorial();}
+function updBet(id,r){const b=bets.find(x=>x.id===id);if(b){b.result=r;saveLocal();updateBadges();renderHistorial();}}
+function deleteBet(id){bets=bets.filter(b=>b.id!==id);saveLocal();updateBadges();renderHistorial();}
+
+// ═══════════════════════════════════════════════════════
+// BALANCE
+// ═══════════════════════════════════════════════════════
+function renderBalance(){
+  const c=document.getElementById("tab-balance");
+  if(!bets.length){c.innerHTML=`<div class="empty"><div style="font-size:48px;margin-bottom:12px;">💰</div><div>Registra apuestas para ver tu balance</div></div>`;return;}
+  const res=bets.filter(b=>b.result!=="pendiente");
+  const gan=bets.filter(b=>b.result==="ganada");
+  const per=bets.filter(b=>b.result==="perdida");
+  const pend=bets.filter(b=>b.result==="pendiente");
+  const tAp=res.reduce((s,b)=>s+b.amount,0);
+  const tGan=gan.reduce((s,b)=>s+(b.odds?b.amount*b.odds:b.amount),0);
+  const bal=tGan-tAp;
+  const wr=res.length?Math.round((gan.length/res.length)*100):0;
+  const byDate={};
+  res.forEach(b=>{if(!byDate[b.date])byDate[b.date]={g:0,p:0,bal:0};if(b.result==="ganada"){byDate[b.date].g++;byDate[b.date].bal+=b.odds?b.amount*(b.odds-1):0;}else{byDate[b.date].p++;byDate[b.date].bal-=b.amount;}});
+  const daysHtml=Object.entries(byDate).sort((a,b2)=>b2[0].localeCompare(a[0])).slice(0,7).map(([dt,d])=>`
+  <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;">
+    <div><div style="font-size:13px;font-weight:700;">${new Date(dt+"T12:00:00").toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"})}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">✅ ${d.g} · ❌ ${d.p}</div></div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${d.bal>=0?"var(--green)":"var(--red)"};">${d.bal>=0?"+":""}${fmt(d.bal)}</div>
+  </div>`).join("");
+  c.innerHTML=`
+  <div class="card fade" style="background:${bal>=0?"linear-gradient(135deg,#001a0d,#00100a)":"linear-gradient(135deg,#1a0005,#100002)"};border-color:${bal>=0?"rgba(0,230,118,.35)":"rgba(255,82,82,.35)"};text-align:center;margin-bottom:20px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,${bal>=0?"var(--green)":"var(--red)"},transparent);"></div>
+    <div style="font-size:11px;color:${bal>=0?"var(--green)":"var(--red)"};letter-spacing:4px;font-weight:700;margin-bottom:8px;">BALANCE TOTAL</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:${bal>=0?"var(--green)":"var(--red)"};line-height:1;">${bal>=0?"+":""}${fmt(bal)}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;">${res.length} apuestas resueltas · ${wr}% tasa de éxito</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+    <div class="stat-card"><div style="font-size:20px;margin-bottom:6px;">🎯</div><div class="stat-label">GANADAS</div><div class="stat-num" style="color:var(--green)">${gan.length}</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">${fmt(tGan)}</div></div>
+    <div class="stat-card"><div style="font-size:20px;margin-bottom:6px;">❌</div><div class="stat-label">PERDIDAS</div><div class="stat-num" style="color:var(--red)">${per.length}</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">${fmt(per.reduce((s,b)=>s+b.amount,0))}</div></div>
+    <div class="stat-card"><div style="font-size:20px;margin-bottom:6px;">⏳</div><div class="stat-label">PENDIENTES</div><div class="stat-num" style="color:var(--gold)">${pend.length}</div><div style="font-size:10px;color:var(--muted);margin-top:3px;">${fmt(pend.reduce((s,b)=>s+b.amount,0))} en juego</div></div>
+    <div class="stat-card"><div style="font-size:20px;margin-bottom:6px;">📊</div><div class="stat-label">APOSTADO</div><div style="font-size:15px;font-weight:800;margin-top:6px;">${fmt(tAp)}</div></div>
+  </div>
+  ${daysHtml?`<div style="font-size:12px;color:var(--muted);letter-spacing:2px;font-weight:700;margin-bottom:12px;">RENDIMIENTO POR DÍA</div>${daysHtml}`:""}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// ALERTAS
+// ═══════════════════════════════════════════════════════
+function renderAlertas(){
+  const c=document.getElementById("tab-alertas");
+  c.innerHTML=`
+  <div class="card" style="background:rgba(255,214,0,.04);border-color:rgba(255,214,0,.2);margin-bottom:16px;">
+    <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:6px;">🔔 ¿Cómo funcionan?</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7;">Define un equipo y un porcentaje mínimo. Cuando cargues los partidos del día, recibirás una notificación si ese equipo supera ese porcentaje de ganar.</div>
+  </div>
+  <button class="btn btn-green btn-full" style="border-radius:14px;font-size:14px;margin-bottom:16px;" onclick="toggleAlertForm()">➕ Nueva alerta</button>
+  <div id="alertFormWrap"></div>
+  ${alerts.length?alerts.map((a,i)=>`
+  <div class="card fade" style="animation-delay:${i*50}ms;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:15px;font-weight:800;">🔔 ${a.team}</div><div style="font-size:11px;color:var(--muted);margin-top:3px;">${a.flag||"🏆"} ${a.league||"Todas las ligas"} · Alerta si supera <span style="color:var(--gold);font-weight:700;">${a.minPct}%</span></div></div>
+      <button onclick="delAlert(${a.id})" style="background:none;border:none;color:#3a3a5a;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+  </div>`).join(""):`<div class="empty"><div style="font-size:48px;margin-bottom:12px;">🔔</div><div>No tienes alertas configuradas</div></div>`}`;
+}
+
+function toggleAlertForm(){
+  const w=document.getElementById("alertFormWrap");
+  if(!w)return;
+  if(w.innerHTML){w.innerHTML="";return;}
+  w.innerHTML=`
+  <div class="card fade" style="border-color:#2a2a4a;margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:800;margin-bottom:16px;">Nueva alerta</div>
+    <label class="label">LIGA (opcional)</label>
+    <select id="al-lg" class="input" style="margin-bottom:12px;"><option value="|">Todas las ligas</option>${LEAGUE_OPTS}</select>
+    <label class="label">EQUIPO A SEGUIR</label>
+    <input id="al-tm" placeholder="Ej: Real Madrid" class="input" style="margin-bottom:12px;">
+    <label class="label">PORCENTAJE MÍNIMO: <span id="al-pct-lbl" style="color:var(--green);">70%</span></label>
+    <input type="range" min="50" max="95" value="70" id="al-pct" oninput="document.getElementById('al-pct-lbl').textContent=this.value+'%'" style="margin-bottom:16px;">
+    <button class="btn btn-green btn-full" onclick="saveAlert()">Guardar alerta 🔔</button>
+  </div>`;
+}
+
+function saveAlert(){
+  const [flag,league]=(document.getElementById("al-lg").value||"|").split("|");
+  const team=document.getElementById("al-tm").value.trim();
+  const minPct=parseInt(document.getElementById("al-pct").value);
+  if(!team){alert("Ingresa el nombre del equipo.");return;}
+  alerts.unshift({id:Date.now(),flag,league,team,minPct});
+  saveLocal(); renderAlertas();
+}
+function delAlert(id){alerts=alerts.filter(a=>a.id!==id);saveLocal();renderAlertas();}
+
+function checkAlerts(){
+  if(!alerts.length) return;
+  matches.filter(m=>m.homePct!==undefined).forEach(m=>{
+    const best=getBest(m);
+    alerts.forEach(a=>{
+      const tMatch=m.home.toLowerCase().includes(a.team.toLowerCase())||m.away.toLowerCase().includes(a.team.toLowerCase());
+      const lMatch=!a.league||m.league===a.league;
+      const pMatch=best.pct>=a.minPct;
+      const isFav=(best.type==="LOCAL"&&m.home.toLowerCase().includes(a.team.toLowerCase()))||(best.type==="VISITANTE"&&m.away.toLowerCase().includes(a.team.toLowerCase()));
+      if(tMatch&&lMatch&&pMatch&&isFav) showNotif(`🔔 ${a.team} tiene ${best.pct}% de ganar vs ${best.type==="LOCAL"?m.away:m.home}`,"#ffd600");
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICATIONS & BADGES
+// ═══════════════════════════════════════════════════════
+function showNotif(msg, color="#ffd600"){
+  const w=document.getElementById("notifWrap");
+  const id="n"+Date.now();
+  const el=document.createElement("div");
+  el.className="notif";
+  el.id=id;
+  el.style.borderColor=color+"44";
+  el.innerHTML=`<span style="font-size:13px;font-weight:600;">${msg}</span><button onclick="document.getElementById('${id}').remove()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;margin-left:12px;">✕</button>`;
+  w.appendChild(el);
+  setTimeout(()=>document.getElementById(id)?.remove(),6000);
+}
+
+function updateBadges(){
+  const n=bets.filter(b=>b.result==="pendiente").length;
+  ["pendBadge1","pendBadge2"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=n;el.style.display=n?"flex":"none";}
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────
+renderHoy();
+updateBadges();
+</script>
+</body>
+</html>
