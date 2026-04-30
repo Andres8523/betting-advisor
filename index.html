@@ -161,16 +161,11 @@ document.getElementById("dateLabel").textContent = new Date().toLocaleDateString
 // CLAUDE AI — llamada directa (funciona desde HTML local)
 // ═══════════════════════════════════════════════════════
 async function callClaude(prompt, maxTokens=600) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+  const res = await fetch("https://betting-proxy.candres8523.workers.dev", {
     method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      "x-api-key":"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",
-      "anthropic-version":"2023-06-01",
-      "anthropic-dangerous-direct-browser-access":"true"
-    },
+    headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
-      model:"claude-sonnet-4-5",
+      model:"claude-haiku-4-5-20251001",
       max_tokens: maxTokens,
       messages:[{role:"user", content:prompt}]
     })
